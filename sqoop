@@ -117,3 +117,104 @@ run the sqoop job again so that only newly added records can be pulled from mysq
 insert 2 more records to Products_replica from mysql
 run the sqoop job again so that only newly added records can be pulled from mysql
 Validate to make sure the records have not been duplicated in Hive table
+
+sqoop job --create hive_sqoop_job \
+-- import \
+--connect jdbc:mysql://ms.itversity.com/retail_export \
+--username retail_user \
+--password itversity \
+--table products_replica \
+--check-column product_id \
+--incremental append \
+--last-value 0 \
+--hive-import \
+--hive-table products_hive \
+--hive-database sumitproblem5
+
+On Hive window:
+
+create database sumitproblem5;
+
+use sumitproblem5;
+
+create table products_hive  (product_id int, product_category_id int, product_name string, product_description string, product_price float, product_imaage string,product_grade int,  product_sentiment string);
+
+On Terminal window
+
+sqoop job --exec hive_sqoop_job
+
+On MySQL window
+
+insert into products_replica values (1378,4,'something 1376','something 2',10.00,'not avaialble',null,'NOT APPLICABLE');
+insert into products_replica values (1379,4,'something 1376','something 2',10.00,'not avaialble',null,'NOT APPLICABLE');
+
+On Terminal Window
+
+sqoop job --exec hive_sqoop_job
+
+On Hive Window
+
+select * from products_hive
+
+//Using sqoop do the following. .
+insert 2 more records into products_hive table using hive. 
+create table in mysql using below command   
+create table products_external  (product_id int(11) primary Key, product_grade int(11), product_category_id int(11), product_name varchar(100), product_description varchar(100), product_price float, product_impage varchar(500), product_sentiment varchar(100));
+export data from products_hive (hive) table to (mysql) products_external table. 
+insert 2 more records to Products_hive table from hive
+export data from products_hive table to products_external table. 
+Validate to make sure the records have not be duplicated in mysql table
+
+On Hive Window
+
+use sumitproblem5;
+
+insert into table products_hive values (1380,4,'something 1380','something 2',8.00,'not avaialble',3,'NOT APPLICABLE');
+
+insert into table products_hive values (1381,4,'something 1380','something 2',8.00,'not avaialble',3,'NOT APPLICABLE');
+
+On MYSQL window
+
+create table products_external  (product_id int(11) primary Key, product_grade int(11), product_category_id int(11), product_name varchar(100), product_description varchar(100), product_price float, product_impage varchar(500), product_sentiment varchar(100));
+
+
+sqoop export \
+--username "retail_user" \
+--password "itversity" \
+--connect jdbc:mysql://ms.itversity.com/retail_export \
+--export-dir /user/hive/warehouse/sumitsinha1680/sumitproblem5.db/products_hive \
+--input-fields-terminated-by '\001' \
+--input-null-non-string "null" \
+--input-null-string "null" \
+--update-mode allowinsert \
+--update-key product_id \
+--columns "product_id,product_category_id,product_name,product_description,product_price,product_impage,product_grade,product_sentiment" --table products_external;
+
+On Hive Window 
+
+insert into table products_hive values (1382,4,'something 1380','something 2',8.00,'not avaialble',3,'NOT APPLICABLE');
+
+insert into table products_hive values (1383,4,'something 1380','something 2',8.00,'not avaialble',3,'NOT APPLICABLE');
+
+On Terminal Window:
+
+sqoop export \
+--username "retail_dba" \
+--password "cloudera" \
+--connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+--export-dir hdfs:/nn01.itversity.com:8020/apps/hive/warehouse/sumitproblem5.db/products_hive \
+--input-fields-terminated-by '\001' \
+--input-null-non-string "null" \
+--input-null-string "null" \
+--update-mode allowinsert \
+--update-key product_id \
+--columns "product_id,product_category_id,product_name,product_description,product_price,product_impage,product_grade,product_sentiment" --table products_external;
+
+To Validate
+On Hive
+select count(*) from problem5.products_hive;
+on MySQL
+select count(*) from products_replica;
+
+
+
